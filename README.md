@@ -1,5 +1,5 @@
 # Equipe 4
-
+```bash
 projeto_forca_capstone/
 │
 ├── server/                     # Backend: Gerencia conexões, regras de negócio e banco
@@ -45,3 +45,4 @@ projeto_forca_capstone/
 ├── .env                        # Variáveis seguras (ex: DB_URI do MongoDB). NÃO VAI PARA O GIT!
 ├── .gitignore                  # Impede que o .env, a pasta __pycache__ e o venv subam pro GitLab
 └── requirements.txt            # Dependências do Python (pymongo, bcrypt, python-dotenv)
+```
