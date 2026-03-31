@@ -1,19 +1,20 @@
 from flask import Flask, request, jsonify
-from server.services.auth_service import login, register
+from server.services.auth_service import AuthService
 
 app = Flask(__name__)
+auth_service = AuthService()
 
 @app.route("/register", methods=["POST"])
 def register_route():
     data = request.json
-    result = register(data["username"], data["password"])
+    result = auth_service.register(data["username"], data["password"])
     return jsonify(result)
 
 
 @app.route("/login", methods=["POST"])
 def login_route():
     data = request.json
-    result = login(data["username"], data["password"])
+    result = auth_service.login(data["username"], data["password"])
     return jsonify(result)
 
 
