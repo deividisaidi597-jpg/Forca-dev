@@ -3,7 +3,6 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
 
-# Carrega as variáveis de ambiente do arquivo .env para a memória
 load_dotenv()
 
 class DatabaseConnection:
@@ -13,40 +12,34 @@ class DatabaseConnection:
     @classmethod
     def connect(cls):
         """
-        Estabelece a conexão com o MongoDB usando o Padrão Singleton.
-        Isso garante que o servidor abra apenas uma conexão e a reutilize.
+        Establishes connection with MongoDB using the Singleton Pattern.
         """
         if cls._client is None:
             try:
                 uri = os.getenv("DB_URI")
                 db_name = os.getenv("DB_NAME")
 
-                print(f"🔄 Tentando conectar ao MongoDB...")
+                print("🔄 Attempting to connect to MongoDB...")
                 
-                # Inicia o cliente do MongoDB
                 cls._client = MongoClient(uri)
-
-                # Dispara um 'ping' para confirmar se o servidor do banco está mesmo online
                 cls._client.admin.command('ping')
-                print("✅ Conexão com o MongoDB estabelecida com sucesso!")
+                print("✅ Successfully connected to MongoDB!")
 
-                # Seleciona o banco de dados
                 cls._db = cls._client[db_name]
 
-                # TRUQUE PARA FORÇAR A CRIAÇÃO DO BANCO AO LIGAR O PROJETO
-                # Verifica se a coleção 'users' já existe. Se não, cria ela vazia.
+                # Initialize database and 'users' collection if they don't exist
                 if "users" not in cls._db.list_collection_names():
                     cls._db.create_collection("users")
-                    print(f"📦 Banco de dados '{db_name}' e coleção 'users' inicializados!")
+                    print(f"📦 Database '{db_name}' and 'users' collection initialized!")
 
             except ConnectionFailure as e:
-                print(f"❌ Erro fatal ao conectar ao MongoDB: {e}")
+                print(f"❌ Fatal error connecting to MongoDB: {e}")
                 raise e
 
     @classmethod
     def get_db(cls):
         """
-        Retorna a instância do banco de dados para ser usada pelos Repositórios.
+        Returns the database instance to be used by Repositories.
         """
         if cls._db is None:
             cls.connect()
