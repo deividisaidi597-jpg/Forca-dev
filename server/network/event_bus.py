@@ -1,20 +1,24 @@
-def handle_message(self, client_socket, payload: dict) -> dict:
-        action = payload.get("action")
-        data = payload.get("data", {})
+import json
+from server.services.auth_service import login, register
+from shared.events import ACTION_LOGIN, ACTION_REGISTER
 
-        if action == "REGISTER":
-            return self.auth_service.register(data.get("username"), data.get("password"))
-            
-        elif action == "LOGIN":
-            return self.auth_service.login(data.get("username"), data.get("password"))
+def handle_event(data):
+    payload = json.loads(data)
 
+    action = payload.get("action")
 
-        elif action == "CREATE_GAME":
-            return self.game_service.create_game(
-                room_id=data.get("room_id"),
-                player_1=data.get("player_1"),
-                category=data.get("category")
-            )
+    if action == ACTION_LOGIN:
+        return login(payload["username"], payload["password"])
 
-        else:
-            return {"status": "error", "message": "Unknown action."}
+    if action == ACTION_REGISTER:
+        return register(payload["username"], payload["password"])
+
+    if action == "CREATE_GAME":
+        return self.game_service.create_game(
+            room_id=data.get("room_id"),
+            player_1=data.get("player_1"),
+            category=data.get("category")
+        )
+
+    else:
+        return {"status": "error", "message": "Unknown action."}

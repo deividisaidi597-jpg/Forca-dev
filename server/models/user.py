@@ -1,9 +1,12 @@
-from dataclasses import dataclass
-
-@dataclass
 class User:
-    username: str
-    password_hash: str
-    is_online: bool = False
-    games_won: int = 0
-    games_played: int = 0
+    def __init__(self, username, password, is_online=False):
+        self.username = username
+        self.password = password
+        self.is_online = is_online
+
+    def to_dict(self):
+        return {
+            "username": self.username,
+            "password": self.password,
+            "is_online": self.is_online
+        }
