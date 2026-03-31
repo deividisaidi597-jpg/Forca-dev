@@ -30,3 +30,12 @@ class AuthService:
             return {"status": "success", "message": f"Welcome, {username}!", "username": username}
         
         return {"status": "error", "message": "Incorrect password."}
+
+# Standalone functions for easy importing
+_auth_service = AuthService()
+
+def register(username, password):
+    return _auth_service.register(username, password)
+
+def login(username, password):
+    return _auth_service.login(username, password)
