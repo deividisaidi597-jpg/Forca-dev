@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
 
+# Carrega as variáveis de ambiente do arquivo .env para a memória
 load_dotenv()
 
 class DatabaseConnection:
@@ -21,13 +22,18 @@ class DatabaseConnection:
 
                 print("🔄 Attempting to connect to MongoDB...")
                 
+                # Inicia o cliente do MongoDB
                 cls._client = MongoClient(uri)
+
+                # Dispara um 'ping' para confirmar se o servidor do banco está mesmo online
                 cls._client.admin.command('ping')
                 print("✅ Successfully connected to MongoDB!")
 
+                # Seleciona o banco de dados
                 cls._db = cls._client[db_name]
 
-                # Initialize database and 'users' collection if they don't exist
+                # TRUQUE PARA FORÇAR A CRIAÇÃO DO BANCO AO LIGAR O PROJETO
+                # Verifica se a coleção 'users' já existe. Se não, cria ela vazia.
                 if "users" not in cls._db.list_collection_names():
                     cls._db.create_collection("users")
                     print(f"📦 Database '{db_name}' and 'users' collection initialized!")

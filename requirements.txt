@@ -2,8 +2,14 @@
 pymongo==4.6.2
 dnspython==2.6.1
 
+# Segurança de senha
 bcrypt==4.1.2
 
+# Variáveis de ambiente
 python-dotenv==1.0.1
 
+# Framework web (API HTTP)
 flask==2.3.2
+
+# Autenticação com token JWT
+pyjwt==2.8.0
