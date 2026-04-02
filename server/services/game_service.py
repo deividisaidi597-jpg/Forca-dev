@@ -16,8 +16,8 @@ class GameService:
     def _error(self, message, code=400):
         return {"status": "error", "message": message}, code
 
-    def _conflict(self, message):
-        return {"status": "error", "message": message}, 409
+    def _conflict(self, message, code=409):
+        return {"status": "error", "message": message}, code
 
     def _not_found(self):
         return {"status": "error", "message": "Game not found."}, 404
@@ -55,7 +55,7 @@ class GameService:
 
         # Validation
         if chosen_category not in VOCABULARY:
-            return {"status": "error", "message": "Invalid category selection."}
+            return self._error("Invalid category selection.")
 
         # Pick the secret word
         secret_word = random.choice(VOCABULARY[chosen_category])
@@ -111,10 +111,9 @@ class GameService:
             "player_status": game_data["player_status"]
         })
 
-        return {
-            "status": "success",
+        return self._success({
             "players": game_data["players"]
-        }
+        })
 
     def start_game(self, room_id: str, player: str):
         game_data = find_game(room_id)
@@ -132,10 +131,9 @@ class GameService:
             "status": "IN_PROGRESS"
         })
 
-        return {
-            "status": "success",
+        return self._success({
             "current_player": game_data["players"][0]
-        }
+        })
 
 
     def guess_letter(self, room_id: str, player: str, letter: str):
@@ -248,7 +246,7 @@ class GameService:
 
         current_player = game.players[game.current_turn]
         if player != current_player:
-            return self._conflict("Not your turn.")
+            return self._conflict("Not your turn.", 403)
 
         if game.player_status.get(player) == "ELIMINATED":
             return self._conflict("You are eliminated.")
