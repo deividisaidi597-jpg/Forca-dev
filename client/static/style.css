@@ -1,0 +1,591 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", Arial, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Container principal - responsivo */
+.container {
+  background: rgba(30, 30, 47, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 20px;
+  width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.5s ease;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* Títulos */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #4caf50, #8bc34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h3 {
+  margin: 15px 0 10px 0;
+  color: #8bc34a;
+}
+
+/* Inputs e selects */
+input,
+select {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 10px;
+  background: rgba(58, 58, 80, 0.8);
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+input:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Botões */
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+}
+
+button.danger {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+/* Área da forca */
+#hangman {
+  font-family: monospace;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #ff9800;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Palavra secreta */
+#word {
+  font-size: 32px;
+  letter-spacing: 8px;
+  color: #4caf50;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  word-break: break-all;
+  margin: 20px 0;
+}
+
+/* Informações da categoria */
+#category,
+#category-info,
+#word-length {
+  text-align: center;
+  margin: 5px 0;
+}
+
+#category {
+  font-size: 18px;
+  font-weight: bold;
+  color: #8bc34a;
+}
+
+/* Lista de jogadores */
+#players {
+  background: rgba(58, 58, 80, 0.4);
+  padding: 15px;
+  border-radius: 12px;
+  margin: 15px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#players p {
+  padding: 10px;
+  margin: 8px 0;
+  background: rgba(58, 58, 80, 0.8);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+#players p:hover {
+  transform: translateX(5px);
+  background: rgba(76, 175, 80, 0.2);
+}
+
+/* Grupos de input */
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.input-group input {
+  flex: 1;
+  margin: 0;
+}
+
+.input-group button {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+  padding: 12px 20px;
+}
+
+/* Mensagens */
+#message,
+#game-message {
+  margin: 15px 0;
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideIn 0.3s ease;
+}
+
+.message-success {
+  background: rgba(76, 175, 80, 0.2);
+  color: #8bc34a;
+  border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.message-error {
+  background: rgba(244, 67, 54, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(244, 67, 54, 0.5);
+}
+
+.message-info {
+  background: rgba(33, 150, 243, 0.2);
+  color: #64b5f6;
+  border: 1px solid rgba(33, 150, 243, 0.5);
+}
+
+/* Modal de categoria */
+#category-selector {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#category-selector > div {
+  background: rgba(30, 30, 47, 0.98);
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  padding: 30px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+#category-selector h3 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#category-select {
+  margin: 20px 0;
+}
+
+/* Botão próximo rodada */
+#restart-btn,
+button[onclick="restartGame()"] {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  margin-top: 20px;
+}
+
+/* Lista de jogos */
+#games-list {
+  margin-top: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#games-list div {
+  background: rgba(58, 58, 80, 0.6);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+#games-list div:hover {
+  background: rgba(76, 175, 80, 0.2);
+  transform: translateX(5px);
+}
+
+#games-list button {
+  width: auto;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+/* Divisor */
+hr {
+  margin: 20px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #4caf50, transparent);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(58, 58, 80, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #45a049;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+/* Desktop (padrão) */
+@media (min-width: 1025px) {
+  .container {
+    max-width: 800px;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    max-width: 90%;
+    padding: 25px;
+  }
+
+  #word {
+    font-size: 28px;
+    letter-spacing: 6px;
+  }
+
+  .input-group {
+    gap: 12px;
+  }
+}
+
+/* Celular (landscape) */
+@media (min-width: 481px) and (max-width: 767px) {
+  body {
+    padding: 15px;
+  }
+
+  .container {
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  #word {
+    font-size: 24px;
+    letter-spacing: 4px;
+  }
+
+  #hangman {
+    font-size: 14px;
+    padding: 15px;
+  }
+
+  .input-group {
+    gap: 8px;
+  }
+}
+
+/* Celular (portrait) */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin: 10px 0 8px 0;
+  }
+
+  input,
+  select,
+  button {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .input-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-group button {
+    width: 100%;
+  }
+
+  #word {
+    font-size: 20px;
+    letter-spacing: 3px;
+    margin: 15px 0;
+  }
+
+  #hangman {
+    font-size: 12px;
+    padding: 12px;
+    margin: 15px 0;
+  }
+
+  #category {
+    font-size: 14px;
+  }
+
+  #players p {
+    padding: 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  #games-list div {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  #games-list button {
+    width: 100%;
+    padding: 10px;
+  }
+
+  #category-selector > div {
+    padding: 20px;
+    width: 95%;
+  }
+
+  #category-selector h3 {
+    font-size: 1.2rem;
+  }
+
+  #restart-btn,
+  button[onclick="restartGame()"] {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .message-success,
+  .message-error,
+  .message-info {
+    font-size: 12px;
+    padding: 10px;
+  }
+}
+
+/* Celular muito pequeno */
+@media (max-width: 360px) {
+  .container {
+    padding: 12px;
+  }
+
+  #word {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  #hangman {
+    font-size: 10px;
+    padding: 10px;
+  }
+
+  button,
+  input,
+  select {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* Ajustes para touch (celular) */
+@media (max-width: 768px) {
+  button,
+  [onclick],
+  select,
+  input {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(76, 175, 80, 0.3);
+    touch-action: manipulation;
+  }
+
+  button:active {
+    transform: scale(0.98);
+  }
+
+  /* Prevenir zoom em inputs no iOS */
+  input,
+  select {
+    font-size: 16px;
+  }
+
+  /* Scroll suave no iOS */
+  #players,
+  #games-list {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Loading */
+.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #fff;
+  border-top-color: #4caf50;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
