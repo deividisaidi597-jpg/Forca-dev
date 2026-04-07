@@ -19,4 +19,4 @@ class Game:
         self.player_status = {
             player_1: "ALIVE"
         }
-        self.status = "WAITING"  # WAITING | IN_PROGRESS | VICTORY | DEFEAT
+        self.status = "WAITING"  # WAITING | IN_PROGRESS 

@@ -14,3 +14,16 @@ def update_game(room_id, data):
         {"room_id": room_id},
         {"$set": data}
     )
+
+def list_games():
+    games = collection.find()
+
+    result = []
+    for game in games:
+        result.append({
+            "room_id": game["room_id"],
+            "status": game["status"],
+            "players": game["players"]
+        })
+
+    return result
