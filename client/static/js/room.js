@@ -1,7 +1,7 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io("http://localhost:5000");
+const socket = io();
 
 const roomId = localStorage.getItem("room_id");
 

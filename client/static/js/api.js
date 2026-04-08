@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:5000";
+const BASE_URL = window.location.origin;
 
 async function apiRequest(endpoint, method = "GET", body = null, auth = false) {
   const headers = {
