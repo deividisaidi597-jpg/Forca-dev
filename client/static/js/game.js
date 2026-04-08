@@ -1,9 +1,7 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io("https://forca-game-dksx.onrender.com", {
-  transports: ["websocket"]
-});
+const socket = io("http://localhost:5000");
 
 // =========================
 // USER + ROOM
