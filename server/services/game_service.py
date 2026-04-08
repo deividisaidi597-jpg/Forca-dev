@@ -614,7 +614,8 @@ class GameService:
             "word_length": len(new_word),
             "players": game_data["players"],
             "player_errors": {p: 0 for p in game_data["players"]},
-            "score": game_data.get("score", {})
+            "score": game_data.get("score", {}),
+            "current_player": game_data["players"][0]
         })
 
     def get_all_categories_status(self, used_words):

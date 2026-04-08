@@ -1,3 +1,6 @@
+gunicorn==21.2.0
+eventlet==0.35.2
+
 # Conexão com o Banco de Dados MongoDB
 pymongo==4.6.2
 dnspython==2.6.1
@@ -10,6 +13,14 @@ python-dotenv==1.0.1
 
 # Framework web (API HTTP)
 flask==2.3.2
+
+# WebSocket / tempo real
+flask-socketio==5.3.6
+python-socketio==5.11.2
+python-engineio==4.9.0
+
+# CORS
+flask-cors==4.0.0
 
 # Autenticação com token JWT
 pyjwt==2.8.0

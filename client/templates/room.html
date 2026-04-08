@@ -9,7 +9,7 @@
     />
     <link rel="stylesheet" href="/static/style.css" />
   </head>
-  <body onload="loadRoom()">
+  <body">
     <div class="container">
       <h2>Room</h2>
 
@@ -18,14 +18,13 @@
       <h3>Players</h3>
       <div id="players"></div>
 
-      <button onclick="startGame()">START</button>
+      <button id="start-btn" onclick="startGame()">START</button>
 
       <p id="message"></p>
     </div>
-
     <script src="../static/js/api.js"></script>
     <script src="../static/js/ui.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="../static/js/room.js"></script>
-    <script src="../static/js/game.js"></script>
   </body>
 </html>

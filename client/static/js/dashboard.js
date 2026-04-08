@@ -82,7 +82,7 @@ async function loadGames() {
     container.appendChild(div);
   });
 
-  setTimeout(loadGames, 10000);
+  setInterval(loadGames, 5000);
 }
 
 async function createGame() {

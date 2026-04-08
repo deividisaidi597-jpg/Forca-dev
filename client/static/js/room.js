@@ -1,10 +1,40 @@
-async function loadRoom() {
-  const roomId = localStorage.getItem("room_id");
-  const token = localStorage.getItem("token");
+// =========================
+// SOCKET
+// =========================
+const socket = io("http://localhost:5000");
 
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  const currentUser = payload.username;
+const roomId = localStorage.getItem("room_id");
 
+const token = localStorage.getItem("token");
+const payload = JSON.parse(atob(token.split(".")[1]));
+const currentUser = payload.username;
+
+// =========================
+// ENTRAR NA SALA
+// =========================
+socket.emit("join_room", {
+  room_id: roomId,
+  username: currentUser,
+});
+
+// =========================
+// EVENTOS
+// =========================
+
+// jogador entrou
+socket.on("player_joined", () => {
+  loadRoomState();
+});
+
+// jogo começou
+socket.on("game_started", () => {
+  window.location.href = "/game";
+});
+
+// =========================
+// CARREGAR ESTADO
+// =========================
+async function loadRoomState() {
   const { data } = await apiRequest(`/game/${roomId}`);
 
   document.getElementById("room-code").innerText = "Room: " + data.room_id;
@@ -30,35 +60,29 @@ async function loadRoom() {
     playersDiv.appendChild(p);
   });
 
-  const startButton = document.querySelector("button");
+  const startButton = document.getElementById("start-btn");
 
-  if (currentUser !== data.owner) {
-    startButton.style.display = "none";
-  }
-
-  setTimeout(loadRoom, 10000);
-}
-
-async function startGame() {
-  const roomId = localStorage.getItem("room_id");
-
-  const { response, data } = await apiRequest(
-    "/game/start",
-    "POST",
-    { room_id: roomId },
-    true,
-  );
-
-  if (response.ok) {
-    showMessage("Game started!", "green");
-
-    setTimeout(() => {
-      window.location.href = "/game";
-    }, 1000);
-  } else {
-    showMessage(data.message, "red");
+  if (startButton) {
+    startButton.disabled = currentUser !== data.owner;
   }
 }
 
-window.loadRoom = loadRoom;
+// =========================
+// START GAME (SOCKET)
+// =========================
+function startGame() {
+  socket.emit("start_game", {
+    room_id: roomId,
+    player: currentUser,
+  });
+}
+
+// =========================
+// INIT
+// =========================
+window.onload = loadRoomState;
+
+// =========================
+// EXPORT
+// =========================
 window.startGame = startGame;
