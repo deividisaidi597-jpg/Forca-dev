@@ -1,5 +1,4 @@
 gunicorn==21.2.0
-eventlet==0.35.2
 
 # Conexão com o Banco de Dados MongoDB
 pymongo==4.6.2

@@ -12,7 +12,7 @@ app = Flask(
 )
 
 # SOCKET.IO
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 auth_service = AuthService()
 game_service = GameService()
