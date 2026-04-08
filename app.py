@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
-
+import os
 from server.services.auth_service import AuthService
 from server.services.game_service import GameService
 from server.utils.jwt_handler import decode_token
@@ -288,4 +288,5 @@ def game_page():
 # RUN
 # =========================
 if __name__ == "__main__":
-    socketio.run(app, port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)

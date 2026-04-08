@@ -1,7 +1,9 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io();
+const socket = io({
+  transports: ["websocket"],
+});
 
 const roomId = localStorage.getItem("room_id");
 

@@ -1,7 +1,9 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io();
+const socket = io({
+  transports: ["websocket"],
+});
 
 // =========================
 // USER + ROOM
