@@ -1,8 +1,8 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io({
-  transports: ["websocket"],
+const socket = io("https://forca-game-dksx.onrender.com", {
+  transports: ["websocket"]
 });
 
 // =========================
