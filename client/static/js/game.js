@@ -1,11 +1,10 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io(
-  window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "https://forca-dev.onrender.com",
-);
+const socket = io({
+  transports: ["polling"],
+  timeout: 20000,
+});
 
 // =========================
 // USER + ROOM
@@ -19,9 +18,13 @@ let gameOwner = null;
 // =========================
 // ENTRAR NA SALA
 // =========================
-socket.emit("join_room", {
-  room_id: roomId,
-  username: currentUser,
+socket.on("connect", () => {
+  console.log("🟢 Connected to socket");
+
+  socket.emit("join_room", {
+    room_id: roomId,
+    username: currentUser,
+  });
 });
 
 // =========================
