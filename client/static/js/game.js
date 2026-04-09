@@ -154,6 +154,13 @@ function updateGameUI(data) {
   if (data.owner) {
     gameOwner = data.owner;
   }
+  const restartBtn = document.getElementById("restart-btn");
+
+  // sempre começa desabilitado
+  if (restartBtn) {
+    restartBtn.disabled = true;
+  }
+
   // Palavra
   if (data.correct_word) {
     document.getElementById("word").innerText = formatWord(data.correct_word);
@@ -176,22 +183,26 @@ function updateGameUI(data) {
   // Jogadores
   renderPlayers(
     data.players,
-    data.player_errors,
-    data.score,
-    data.current_player,
+    data.player_errors || {},
+    data.score || {},
+    data.current_player || null,
   );
 
   // Forca
   const errors = data.player_errors?.[currentUser] ?? 0;
   drawHangman(errors);
 
-  const restartBtn = document.getElementById("restart-btn");
+  const isRoundFinished = data.game_status === "ROUND_FINISHED";
+  const isOwner = currentUser === gameOwner;
 
-  // Status
-  if (currentUser === gameOwner && data.game_status === "ROUND_FINISHED") {
-    if (restartBtn) restartBtn.disabled = false; // HABILITA
-  } else {
-    if (restartBtn) restartBtn.disabled = true; // DESABILITA
+  if (isRoundFinished) {
+    showMessage("Round finished!", "orange");
+
+    if (restartBtn) {
+      restartBtn.disabled = !isOwner;
+    }
+
+    return;
   }
 }
 
@@ -221,15 +232,16 @@ function renderPlayers(players, errors, score, currentPlayer) {
   players.forEach((player) => {
     const el = document.createElement("p");
 
-    const err = errors[player] || 0;
-    const pts = score[player] || 0;
+    const err = errors?.[player] ?? 0;
+    const pts = score?.[player] ?? 0;
 
     el.innerText = `🧍 ${player} | ❌ ${err} | ⭐ ${pts}`;
-    container.appendChild(el);
     if (player === currentPlayer) {
       el.style.color = "yellow";
       el.style.fontWeight = "bold";
     }
+
+    container.appendChild(el);
   });
 }
 
@@ -269,12 +281,24 @@ async function loadInitialGame() {
 
   console.log("INIT GAME:", data);
 
+  if (data.game_status === "ROUND_FINISHED") {
+    const restartBtn = document.getElementById("restart-btn");
+
+    if (restartBtn && currentUser === data.owner) {
+      restartBtn.disabled = false;
+    }
+  }
+
   updateGameUI(data);
 
   // TRATAR ESTADO APÓS RELOAD
   const restartBtn = document.getElementById("restart-btn");
 
-  if (data.status === "ROUND_FINISHED") {
+  if (restartBtn) {
+    restartBtn.disabled = true;
+  }
+
+  if (data.game_status === "ROUND_FINISHED") {
     if (currentUser === data.owner) {
       restartBtn.disabled = false;
     } else {
@@ -283,7 +307,7 @@ async function loadInitialGame() {
     }
   }
 
-  if (data.status === "FINISHED") {
+  if (data.game_status === "FINISHED") {
     showMessage("🏁 Game finished!", "green");
     restartBtn.disabled = true;
   }

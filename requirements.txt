@@ -1,16 +1,21 @@
 gunicorn==21.2.0
-# Conexão com o Banco de Dados MongoDB
+
+# Banco de dados
 pymongo==4.6.2
 dnspython==2.6.1
 
-# Segurança de senha
+# Segurança
 bcrypt==4.1.2
 
 # Variáveis de ambiente
 python-dotenv==1.0.1
 
-# Framework web (API HTTP)
+# WebSocket (ESSENCIAL pro SocketIO)
+flask-socketio==5.3.6
+eventlet==0.33.3
+
+# Framework web
 flask==2.3.2
 
-# Autenticação com token JWT
+# JWT
 pyjwt==2.8.0

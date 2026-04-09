@@ -231,6 +231,7 @@ class GameService:
         if word_letters.issubset(guessed_letters_set):
             game_data["score"][player] += 1
             self._check_winner(game, game_data)
+            game.guessed_letters = list(set(game.secret_word.replace(" ", "")))
 
             game.status = "ROUND_FINISHED"
 
@@ -239,7 +240,9 @@ class GameService:
                 "status": "ROUND_FINISHED",
                 "categories_status": self.get_all_categories_status(
                     game_data.get("used_words", [])
-                )
+                ),
+                "guessed_letters": game.guessed_letters,
+                "current_turn": None
             })
 
             return self._success({
@@ -269,17 +272,20 @@ class GameService:
                     "player_status": game.player_status,
                     "score": game_data["score"],
                     "status": "ROUND_FINISHED",
+                    "current_turn": None, 
                     "categories_status": self.get_all_categories_status(
                         game_data.get("used_words", [])
                     )
                 })
 
                 return self._success({
-                    "message": "They were all eliminated!",
+                    "message": "All players eliminated!",
                     "game_status": "ROUND_FINISHED",
                     "score": game_data["score"],
                     "players": game.players,
-                    "player_status": game.player_status
+                    "player_status": game.player_status,
+                    "player_errors": game.player_errors,
+                    "current_player": None 
                 })
 
 
@@ -423,15 +429,18 @@ class GameService:
                     "status": "ROUND_FINISHED",
                     "categories_status": self.get_all_categories_status(
                         game_data.get("used_words", [])
-                    )
+                    ),
+                    "current_turn": None
                 })
 
                 return self._success({
-                    "message": "They were all eliminated!",
+                    "message": "All players eliminated!",
                     "game_status": "ROUND_FINISHED",
                     "score": game_data["score"],
                     "players": game.players,
-                    "player_status": game.player_status
+                    "player_status": game.player_status,
+                    "player_errors": game.player_errors,
+                    "current_player": None
                 })
 
         # próximo turno

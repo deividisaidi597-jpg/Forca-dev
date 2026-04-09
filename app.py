@@ -96,11 +96,30 @@ def get_game(room_id):
     game["_id"] = str(game["_id"])
     game["word_length"] = len(game["secret_word"])
     game["owner"] = game.get("owner")
-    game["current_player"] = game["players"][game["current_turn"]]
+    game["game_status"] = game["status"]
+
+    if game.get("current_turn") is not None:
+        game["current_player"] = game["players"][game["current_turn"]]
+    else:
+        game["current_player"] = None
+    
     game["categories_status"] = game_service.get_all_categories_status(
         game.get("used_words", [])
     )
 
+    from server.models.game import Game
+
+    temp_game = Game(
+        secret_word=game["secret_word"],
+        player_1=game["owner"]
+    )
+    temp_game.guessed_letters = game.get("guessed_letters", [])
+
+    game["masked_word"] = game_service._get_masked_word(temp_game)
+
+    if game["status"] == "ROUND_FINISHED":
+        game["correct_word"] = game["secret_word"]
+        
     return game, 200
 
 

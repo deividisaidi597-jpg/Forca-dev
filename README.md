@@ -51,5 +51,5 @@ projeto_forca_capstone/
 ## Instalação das Dependências
 
 ```bash
-pip install -r requirements.txt
+py -3.11 -m pip install -r requirements.txt
 ```
