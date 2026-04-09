@@ -1,7 +1,11 @@
 // =========================
 // SOCKET
 // =========================
-const socket = io("http://localhost:5000");
+const socket = io(
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://forca-dev.onrender.com",
+);
 
 // =========================
 // USER + ROOM
