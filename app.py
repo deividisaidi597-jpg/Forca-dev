@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
@@ -5,10 +6,13 @@ from server.services.auth_service import AuthService
 from server.services.game_service import GameService
 from server.utils.jwt_handler import decode_token
 
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(
     __name__,
-    template_folder="client/templates",
-    static_folder="client/static"
+    template_folder=os.path.join(BASE_DIR, "client/templates"),
+    static_folder=os.path.join(BASE_DIR, "client/static")
 )
 
 # SOCKET.IO
