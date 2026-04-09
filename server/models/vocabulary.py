@@ -1,3 +1,8 @@
+"""
+Game Vocabulary - All word categories for the Hangman game
+Contains vocabulary organized by themes/topics
+"""
+
 VOCABULARY = {
     "COUNTRIES": [
         "ENGLAND", "SPAIN", "FRANCE", "PORTUGAL", "MEXICO", "GERMANY", "CANADA", 
