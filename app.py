@@ -12,7 +12,7 @@ app = Flask(
 )
 
 # SOCKET.IO
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 auth_service = AuthService()
 game_service = GameService()
@@ -119,7 +119,7 @@ def get_game(room_id):
 
     if game["status"] == "ROUND_FINISHED":
         game["correct_word"] = game["secret_word"]
-        
+
     return game, 200
 
 
