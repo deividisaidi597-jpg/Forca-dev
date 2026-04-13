@@ -1,11 +1,9 @@
 import os
 from flask import Flask, request, render_template
-from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from server.services.auth_service import AuthService
 from server.services.game_service import GameService
 from server.utils.jwt_handler import decode_token
-
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,12 +13,8 @@ app = Flask(
     static_folder=os.path.join(BASE_DIR, "client/static")
 )
 
-# SOCKET.IO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
-
 auth_service = AuthService()
 game_service = GameService()
-
 
 # =========================
 # 🔐 AUTH
@@ -42,14 +36,20 @@ def get_current_user(request):
 @app.route("/register", methods=["POST"])
 def register_route():
     data = request.json
-    response, status = auth_service.register(data["username"], data["password"])
+    response, status = auth_service.register(
+        data["username"],
+        data["password"]
+    )
     return response, status
 
 
 @app.route("/login", methods=["POST"])
 def login_route():
     data = request.json
-    response, status = auth_service.login(data["username"], data["password"])
+    response, status = auth_service.login(
+        data["username"],
+        data["password"]
+    )
     return response, status
 
 
@@ -91,28 +91,31 @@ def join_game():
 @app.route("/game/<room_id>", methods=["GET"])
 def get_game(room_id):
     from server.database.game_repo import find_game
+    from server.models.game import Game
 
     game = find_game(room_id)
 
     if not game:
         return {"message": "Game not found"}, 404
 
+    # 🔧 ajustes para frontend
     game["_id"] = str(game["_id"])
     game["word_length"] = len(game["secret_word"])
     game["owner"] = game.get("owner")
     game["game_status"] = game["status"]
 
+    # jogador atual
     if game.get("current_turn") is not None:
         game["current_player"] = game["players"][game["current_turn"]]
     else:
         game["current_player"] = None
-    
+
+    # categorias restantes
     game["categories_status"] = game_service.get_all_categories_status(
         game.get("used_words", [])
     )
 
-    from server.models.game import Game
-
+    # palavra mascarada
     temp_game = Game(
         secret_word=game["secret_word"],
         player_1=game["owner"]
@@ -121,6 +124,7 @@ def get_game(room_id):
 
     game["masked_word"] = game_service._get_masked_word(temp_game)
 
+    # palavra correta quando termina
     if game["status"] == "ROUND_FINISHED":
         game["correct_word"] = game["secret_word"]
 
@@ -128,146 +132,90 @@ def get_game(room_id):
 
 
 # =========================
-# SOCKET EVENTS
+# 🎮 GAME ACTIONS (HTTP)
 # =========================
+@app.route("/game/start", methods=["POST"])
+def start_game():
+    player = get_current_user(request)
+    if not player:
+        return {"status": "error", "message": "Unauthorized"}, 401
 
-# 👥 entrar na sala
-@socketio.on("join_room")
-def handle_join(data):
-    room_id = data["room_id"]
-    username = data["username"]
+    data = request.json
 
-    join_room(room_id)
+    response, status = game_service.start_game(
+        data["room_id"],
+        player
+    )
 
-    emit("player_joined", {
-        "message": f"{username} joined the room",
-        "player": username
-    }, room=room_id)
-
-
-# sair da sala
-@socketio.on("leave_room")
-def handle_leave(data):
-    room_id = data["room_id"]
-    username = data["username"]
-
-    leave_room(room_id)
-
-    emit("player_left", {
-        "message": f"{username} left the room"
-    }, room=room_id)
+    return response, status
 
 
-# iniciar jogo
-@socketio.on("start_game")
-def handle_start(data):
-    room_id = data["room_id"]
-    player = data["player"]
+@app.route("/game/guess-letter", methods=["POST"])
+def guess_letter():
+    player = get_current_user(request)
+    if not player:
+        return {"status": "error", "message": "Unauthorized"}, 401
 
-    response, status = game_service.start_game(room_id, player)
+    data = request.json
 
-    emit("game_started", response, room=room_id)
+    response, status = game_service.guess_letter(
+        data["room_id"],
+        player,
+        data["letter"]
+    )
 
-
-# chute de letra
-@socketio.on("guess_letter")
-def handle_guess_letter(data):
-    room_id = data["room_id"]
-    player = data["player"]
-    letter = data["letter"]
-
-    response, status = game_service.guess_letter(room_id, player, letter)
-
-    # ERRO → só jogador
-    if response.get("status") == "error":
-        emit("private_message", {
-            "message": response.get("message")
-        }, to=request.sid)
-        return
-
-    # FEEDBACK → só jogador
-    if response.get("message"):
-        emit("private_message", {
-            "message": response.get("message")
-        }, to=request.sid)
-
-    # EVENTO GLOBAL
-    global_message = f"{player} guessed '{letter.upper()}'"
-
-    # se rodada acabou → muda mensagem
-    if response.get("game_status") == "ROUND_FINISHED":
-        global_message = f"🎉 Round finished!"
-
-    emit("game_update", {
-        **response,
-        "message": global_message
-    }, room=room_id)
+    return response, status
 
 
-# chute de palavra
-@socketio.on("guess_word")
-def handle_guess_word(data):
-    room_id = data["room_id"]
-    player = data["player"]
-    word = data["word"]
+@app.route("/game/guess-word", methods=["POST"])
+def guess_word():
+    player = get_current_user(request)
+    if not player:
+        return {"status": "error", "message": "Unauthorized"}, 401
 
-    response, status = game_service.guess_word(room_id, player, word)
+    data = request.json
 
-    # ERRO → só jogador
-    if response.get("status") == "error":
-        emit("private_message", {
-            "message": response.get("message")
-        }, to=request.sid)
-        return
+    response, status = game_service.guess_word(
+        data["room_id"],
+        player,
+        data["word"]
+    )
 
-    # FEEDBACK → só jogador
-    if response.get("message"):
-        emit("private_message", {
-            "message": response.get("message")
-        }, to=request.sid)
-
-    # EVENTO GLOBAL
-    global_message = f"{player} guessed '{word.upper()}'"
-
-    # se rodada acabou → muda mensagem
-    if response.get("game_status") == "ROUND_FINISHED":
-        global_message = f"🎉 Round finished!"
-
-    emit("game_update", {
-        **response,
-        "message": global_message
-    }, room=room_id)
+    return response, status
 
 
-# próxima rodada
-@socketio.on("restart_game")
-def handle_restart(data):
-    room_id = data["room_id"]
-    player = data["player"]
+@app.route("/game/restart", methods=["POST"])
+def restart_game():
+    player = get_current_user(request)
+    if not player:
+        return {"status": "error", "message": "Unauthorized"}, 401
 
-    response, status = game_service.restart_round(room_id, player)
+    data = request.json
 
-    message = "New round started!"
+    response, status = game_service.restart_round(
+        data["room_id"],
+        player
+    )
 
-    if response.get("finished_category"):
-        message = "🏆 Category finished!"
-
-    emit("round_restart", {
-        **response,
-        "message": message
-    }, room=room_id)
+    return response, status
 
 
-# mudar categoria
-@socketio.on("change_category")
-def handle_change_category(data):
-    room_id = data["room_id"]
-    player = data["player"]
-    category = data["category"]
+@app.route("/game/change-category", methods=["POST"])
+def change_category():
+    player = get_current_user(request)
+    if not player:
+        return {"status": "error", "message": "Unauthorized"}, 401
 
-    response, status = game_service.change_category(room_id, player, category)
+    data = request.json
 
-    emit("category_changed", response, room=room_id)
+    response, status = game_service.change_category(
+        data["room_id"],
+        player,
+        data["category"]
+    )
+
+    return response, status
+
 
 @app.route("/categories", methods=["GET"])
 def categories():
@@ -279,8 +227,10 @@ def list_games():
     from server.database.game_repo import list_games
     games = list_games()
     return {"games": games}, 200
+
+
 # =========================
-# PAGES
+# 📄 PAGES
 # =========================
 @app.route("/")
 def login_page():
@@ -308,7 +258,7 @@ def game_page():
 
 
 # =========================
-# RUN
+# 🚀 RUN
 # =========================
 if __name__ == "__main__":
-    socketio.run(app, port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

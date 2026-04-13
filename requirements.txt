@@ -10,10 +10,6 @@ bcrypt==4.1.2
 # Variáveis de ambiente
 python-dotenv==1.0.1
 
-# WebSocket (ESSENCIAL pro SocketIO)
-flask-socketio==5.3.6
-#eventlet==0.33.3
-
 # Framework web
 flask==2.3.2
 

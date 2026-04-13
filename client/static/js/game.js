@@ -1,12 +1,4 @@
 // =========================
-// SOCKET
-// =========================
-const socket = io({
-  transports: ["polling"],
-  timeout: 20000,
-});
-
-// =========================
 // USER + ROOM
 // =========================
 const roomId = localStorage.getItem("room_id");
@@ -14,23 +6,13 @@ const roomId = localStorage.getItem("room_id");
 const token = localStorage.getItem("token");
 const payload = JSON.parse(atob(token.split(".")[1]));
 const currentUser = payload.username;
-let gameOwner = null;
-// =========================
-// ENTRAR NA SALA
-// =========================
-socket.on("connect", () => {
-  console.log("🟢 Connected to socket");
 
-  socket.emit("join_room", {
-    room_id: roomId,
-    username: currentUser,
-  });
-});
+let gameOwner = null;
 
 // =========================
 // AÇÕES DO JOGADOR
 // =========================
-function guessLetter() {
+async function guessLetter() {
   const letter = document.getElementById("letter").value;
 
   if (!letter) {
@@ -38,16 +20,31 @@ function guessLetter() {
     return;
   }
 
-  socket.emit("guess_letter", {
-    room_id: roomId,
-    player: currentUser,
-    letter: letter,
-  });
+  try {
+    const { data } = await apiRequest(
+      "/game/guess-letter",
+      "POST",
+      {
+        room_id: roomId,
+        letter: letter,
+      },
+      true,
+    );
 
-  document.getElementById("letter").value = "";
+    updateGameUI(data);
+
+    if (data.message) {
+      showMessage(data.message, "green");
+    }
+
+    document.getElementById("letter").value = "";
+  } catch (err) {
+    console.error(err);
+    showMessage("Error guessing letter", "red");
+  }
 }
 
-function guessWord() {
+async function guessWord() {
   const word = document.getElementById("word-input").value;
 
   if (!word) {
@@ -55,30 +52,52 @@ function guessWord() {
     return;
   }
 
-  socket.emit("guess_word", {
-    room_id: roomId,
-    player: currentUser,
-    word: word,
-  });
+  try {
+    const { data } = await apiRequest(
+      "/game/guess-word",
+      "POST",
+      {
+        room_id: roomId,
+        word: word,
+      },
+      true,
+    );
 
-  document.getElementById("word-input").value = "";
+    updateGameUI(data);
+
+    if (data.message) {
+      showMessage(data.message, "green");
+    }
+
+    document.getElementById("word-input").value = "";
+  } catch (err) {
+    console.error(err);
+    showMessage("Error guessing word", "red");
+  }
 }
 
-function startGame() {
-  socket.emit("start_game", {
-    room_id: roomId,
-    player: currentUser,
-  });
+async function restartGame() {
+  try {
+    const { data } = await apiRequest(
+      "/game/restart",
+      "POST",
+      {
+        room_id: roomId,
+      },
+      true,
+    );
+
+    updateGameUI(data);
+
+    if (data.message) {
+      showMessage(data.message, "green");
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-function restartGame() {
-  socket.emit("restart_game", {
-    room_id: roomId,
-    player: currentUser,
-  });
-}
-
-function changeCategory() {
+async function changeCategory() {
   const select = document.getElementById("category-select");
   const category = select.value;
   const modal = document.getElementById("category-selector");
@@ -88,71 +107,38 @@ function changeCategory() {
     return;
   }
 
-  socket.emit("change_category", {
-    room_id: roomId,
-    player: currentUser,
-    category: category,
-  });
+  try {
+    const { data } = await apiRequest(
+      "/game/change-category",
+      "POST",
+      {
+        room_id: roomId,
+        category: category,
+      },
+      true,
+    );
 
-  if (modal) modal.style.display = "none";
+    updateGameUI(data);
 
-  showMessage("Changing category...", "green");
+    if (modal) modal.style.display = "none";
+
+    showMessage("Category changed!", "green");
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // =========================
-// RECEBER ATUALIZAÇÕES
+// POLLING DO JOGO
 // =========================
-
-// jogador entrou
-socket.on("player_joined", (data) => {
-  showMessage(data.message, "green");
-});
-
-// jogo começou
-socket.on("game_started", (data) => {
-  updateGameUI(data);
-  showMessage("Game started!", "green");
-});
-
-// atualização do jogo
-socket.on("game_update", (data) => {
-  updateGameUI(data);
-  console.log("UPDATE", data);
-  if (data.message) {
-    showMessage(data.message, "green");
+setInterval(async () => {
+  try {
+    const { data } = await apiRequest(`/game/${roomId}`, "GET", null, true);
+    updateGameUI(data);
+  } catch (err) {
+    console.error("Erro ao atualizar jogo:", err);
   }
-});
-
-socket.on("private_message", (data) => {
-  if (data.message) {
-    showMessage(data.message, "red");
-  }
-});
-
-// nova rodada
-socket.on("round_restart", (data) => {
-  const modal = document.getElementById("category-selector");
-
-  if (data.finished_category) {
-    if (currentUser !== gameOwner) {
-      showMessage("Waiting for owner to choose category...", "orange");
-      return;
-    }
-
-    showCategorySelector(data.categories);
-    return;
-  }
-  if (modal) modal.style.display = "none";
-
-  updateGameUI(data);
-  showMessage("New round!", "green");
-});
-
-// categoria mudou
-socket.on("category_changed", (data) => {
-  updateGameUI(data);
-  showMessage("Category changed!", "green");
-});
+}, 2000);
 
 // =========================
 // ATUALIZAR UI
@@ -161,9 +147,9 @@ function updateGameUI(data) {
   if (data.owner) {
     gameOwner = data.owner;
   }
+
   const restartBtn = document.getElementById("restart-btn");
 
-  // sempre começa desabilitado
   if (restartBtn) {
     restartBtn.disabled = true;
   }
@@ -175,7 +161,7 @@ function updateGameUI(data) {
     document.getElementById("word").innerText = data.masked_word;
   }
 
-  // Tamanho da palavra
+  // Tamanho
   if (data.word_length) {
     document.getElementById("word-length").innerText =
       "Letters: " + data.word_length;
@@ -243,6 +229,7 @@ function renderPlayers(players, errors, score, currentPlayer) {
     const pts = score?.[player] ?? 0;
 
     el.innerText = `🧍 ${player} | ❌ ${err} | ⭐ ${pts}`;
+
     if (player === currentPlayer) {
       el.style.color = "yellow";
       el.style.fontWeight = "bold";
@@ -260,72 +247,28 @@ function formatWord(word) {
 }
 
 // =========================
-// CATEGORIAS
+// INIT
 // =========================
-function showCategorySelector(categories) {
-  const container = document.getElementById("category-selector");
-  const select = document.getElementById("category-select");
-
-  if (currentUser !== gameOwner) {
-    select.disabled = true;
-  }
-
-  container.style.display = "block";
-  select.innerHTML = "";
-
-  categories
-    .filter((c) => c.remaining > 0)
-    .forEach((cat) => {
-      const option = document.createElement("option");
-      option.value = cat.category;
-      option.textContent = `${cat.category} (${cat.remaining})`;
-      select.appendChild(option);
-    });
-}
-
 async function loadInitialGame() {
-  const { data } = await apiRequest(`/game/${roomId}`);
-
-  console.log("INIT GAME:", data);
-
-  if (data.game_status === "ROUND_FINISHED") {
-    const restartBtn = document.getElementById("restart-btn");
-
-    if (restartBtn && currentUser === data.owner) {
-      restartBtn.disabled = false;
-    }
-  }
-
-  updateGameUI(data);
-
-  // TRATAR ESTADO APÓS RELOAD
-  const restartBtn = document.getElementById("restart-btn");
-
-  if (restartBtn) {
-    restartBtn.disabled = true;
-  }
-
-  if (data.game_status === "ROUND_FINISHED") {
-    if (currentUser === data.owner) {
-      restartBtn.disabled = false;
-    } else {
-      restartBtn.disabled = true;
-      showMessage("Waiting for owner to start next round...", "orange");
-    }
-  }
-
-  if (data.game_status === "FINISHED") {
-    showMessage("🏁 Game finished!", "green");
-    restartBtn.disabled = true;
+  try {
+    const { data } = await apiRequest(`/game/${roomId}`);
+    updateGameUI(data);
+  } catch (err) {
+    console.error(err);
   }
 }
+function closeCategorySelector() {
+  const modal = document.getElementById("category-selector");
+  if (modal) modal.style.display = "none";
+}
+
+window.onload = loadInitialGame;
 
 // =========================
 // EXPORT
 // =========================
-window.onload = loadInitialGame;
 window.guessLetter = guessLetter;
 window.guessWord = guessWord;
-window.startGame = startGame;
 window.restartGame = restartGame;
 window.changeCategory = changeCategory;
+window.closeCategorySelector = closeCategorySelector;

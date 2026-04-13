@@ -388,14 +388,14 @@ class GameService:
             new_word, used_words, _ = result
 
             update_game(room_id, {
-                "secret_word": new_word,
-                "used_words": used_words,
-                "guessed_letters": [],
                 "score": game_data["score"],
+                "status": "ROUND_FINISHED",
+                "categories_status": self.get_all_categories_status(
+                    game_data.get("used_words", [])
+                ),
                 "player_errors": game.player_errors,
                 "player_status": game.player_status,
-                "status": "ROUND_FINISHED",
-                "current_turn": 0
+                "current_turn": None
             })
             return self._success({
                 "message": "You guessed the word!",
