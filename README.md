@@ -53,3 +53,8 @@ projeto_forca_capstone/
 ```bash
 py -3.11 -m pip install -r requirements.txt
 ```
+
+```bash
+python app.py
+
+```

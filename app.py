@@ -257,6 +257,11 @@ def game_page():
     return render_template("game.html")
 
 
+@app.route("/winner")
+def winner_page():
+    return render_template("winner.html")
+
+
 # =========================
 # 🚀 RUN
 # =========================
