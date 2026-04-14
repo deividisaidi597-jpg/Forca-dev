@@ -57,7 +57,6 @@ class GameService:
         if chosen_category not in VOCABULARY:
             return self._error("Invalid category selection.")
 
-        # Pick the secret word
         secret_word = random.choice(VOCABULARY[chosen_category])
 
         new_game = Game(
@@ -359,33 +358,6 @@ class GameService:
         if word == secret_word_normalized or word == game.secret_word:
             game_data["score"][player] = game_data.get("score", {}).get(player, 0) + 1
             self._check_winner(game, game_data)
-            result = self._get_new_word(game_data)
-
-            if not result:
-                update_game(room_id, {
-                    "score": game_data["score"],
-                    "status": "ROUND_FINISHED",
-                    "categories_status": self.get_all_categories_status(
-                        game_data.get("used_words", [])
-                    ),
-                    "player_errors": game.player_errors,
-                    "player_status": game.player_status
-                })
-
-                return self._success({
-                    "message": "Category completed!",
-                    "correct_word": game.secret_word,
-                    "game_status": "ROUND_FINISHED",
-                    "score": game_data["score"],
-                    "player_status": game.player_status,
-                    "player_errors": game.player_errors,
-                    "players": game.players,
-                    "categories_status": self.get_all_categories_status(
-                        game_data.get("used_words", [])
-                    )
-                })
-            
-            new_word, used_words, _ = result
 
             update_game(room_id, {
                 "score": game_data["score"],
@@ -397,10 +369,10 @@ class GameService:
                 "player_status": game.player_status,
                 "current_turn": None
             })
+
             return self._success({
                 "message": "You guessed the word!",
                 "correct_word": game.secret_word,
-                "masked_word": self._get_masked_word(game),
                 "game_status": "ROUND_FINISHED",
                 "players": game.players,
                 "player_errors": game.player_errors,
@@ -468,8 +440,8 @@ class GameService:
 
     def _get_new_word(self, game_data):
         current_category = game_data["category"]
-        # used = game_data.get("used_words", [])
-        used = game_data.get("used_words") or []
+        # Make a copy to avoid reference issues
+        used = list(game_data.get("used_words") or [])
 
         available_words = [
             w for w in VOCABULARY[current_category]
@@ -479,7 +451,8 @@ class GameService:
         if not available_words:
             return None  # NÃO troca categoria
 
-        new_word = random.choice(available_words)
+        # Always pick sequentially (first available word)
+        new_word = available_words[0]
         used.append(new_word)
 
         return new_word, used, current_category
@@ -487,7 +460,7 @@ class GameService:
 
     def _check_winner(self, game, game_data):
         for player, points in game_data["score"].items():
-            if points >= 10:
+            if points >= 2:
                 game.status = "FINISHED"
                 return player
         return None
@@ -502,19 +475,18 @@ class GameService:
         if game_data["status"] == "FINISHED":
             return self._conflict("Game already finished.")
 
+        # Prevent race conditions - block restart if game already in progress
+        if game_data.get("status") == "IN_PROGRESS":
+            return self._conflict("Cannot restart - round already in progress.")
+
         current_category = game_data["category"]
-        used_words = game_data.get("used_words", [])
+        
+        # Use _get_new_word to get next word and updated used_words
+        result = self._get_new_word(game_data)
 
-        # pega lista de palavras disponíveis na categoria atual
-        available_words = [
-            w for w in VOCABULARY[current_category]
-            if w not in used_words
-        ]
-
-        # Se ainda houver palavras → só pula a palavra
-        if available_words:
-            new_word = random.choice(available_words)
-            used_words.append(new_word)
+        # Se ainda houver palavras → próxima rodada
+        if result:
+            new_word, used_words, _ = result
 
             update_game(room_id, {
                 "secret_word": new_word,
@@ -546,6 +518,7 @@ class GameService:
             })
 
         # Se acabou a categoria → mostra seletor, não muda categoria sozinho
+        used_words = game_data.get("used_words", [])
         update_game(room_id, {
             "status": "ROUND_FINISHED",
         })
@@ -594,14 +567,16 @@ class GameService:
         if new_category not in VOCABULARY:
             return self._error("Invalid category.")
 
-        used_words = game_data.get("used_words", [])
-        available_words = [w for w in VOCABULARY[new_category] if w not in used_words]
+        # Temporarily change category to use _get_new_word
+        original_category = game_data.get("category")
+        game_data["category"] = new_category
+        
+        result = self._get_new_word(game_data)
 
-        if not available_words:
+        if not result:
             return self._error("No words available in this category.")
-
-        new_word = random.choice(available_words)
-        used_words.append(new_word)
+        
+        new_word, used_words, _ = result
 
         update_game(room_id, {
             "category": new_category,
