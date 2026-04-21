@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, render_template
-
+from flask_socketio import SocketIO
 from server.services.auth_service import AuthService
 from server.services.game_service import GameService
 from server.utils.jwt_handler import decode_token
@@ -12,7 +12,7 @@ app = Flask(
     template_folder=os.path.join(BASE_DIR, "client/templates"),
     static_folder=os.path.join(BASE_DIR, "client/static")
 )
-
+socketio = SocketIO(app)
 auth_service = AuthService()
 game_service = GameService()
 
@@ -266,4 +266,5 @@ def winner_page():
 # 🚀 RUN
 # =========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)

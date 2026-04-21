@@ -1,14 +1,38 @@
 // =========================
+// SOCKET
+// =========================
+const socket = io(window.location.origin);
+
+// =========================
 // USER + ROOM
 // =========================
 const roomId = localStorage.getItem("room_id");
 
-const token = localStorage.getItem("token");
-const payload = JSON.parse(atob(token.split(".")[1]));
-const currentUser = payload.username;
-
 let gameOwner = null;
 
+let currentUser = null;
+
+try {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No token");
+
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  currentUser = payload.username;
+} catch (e) {
+  console.error("Auth error:", e);
+  window.location.href = "/";
+}
+// =========================
+// ENTRAR NA SALA
+// =========================
+socket.on("connect", () => {
+  showMessage("Connected!", "green");
+
+  socket.emit("join_room", {
+    room_id: roomId,
+    username: currentUser,
+  });
+});
 // =========================
 // AÇÕES DO JOGADOR
 // =========================

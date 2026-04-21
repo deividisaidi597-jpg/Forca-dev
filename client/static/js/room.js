@@ -1,14 +1,51 @@
 // =========================
 // USER + ROOM
 // =========================
+const socket = io(window.location.origin);
+
 const roomId = localStorage.getItem("room_id");
 
-const token = localStorage.getItem("token");
-const payload = JSON.parse(atob(token.split(".")[1]));
-const currentUser = payload.username;
+let currentUser = null;
+
+try {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No token");
+
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  currentUser = payload.username;
+} catch (e) {
+  console.error("Auth error:", e);
+  window.location.href = "/";
+}
 
 // =========================
-// CARREGAR ESTADO DA SALA
+// ENTRAR NA SALA
+// =========================
+socket.on("connect", () => {
+  showMessage("Connected!", "green");
+
+  socket.emit("join_room", {
+    room_id: roomId,
+    username: currentUser,
+  });
+});
+
+// =========================
+// EVENTOS
+// =========================
+
+// jogador entrou
+socket.on("player_joined", () => {
+  loadRoomState();
+});
+
+// jogo começou
+socket.on("game_started", () => {
+  window.location.href = "/game";
+});
+
+// =========================
+// CARREGAR ESTADO
 // =========================
 async function loadRoomState() {
   try {
